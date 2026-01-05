@@ -1,0 +1,21 @@
+# Build artifacts
+build/
+hashmap_tests
+hashmap_main
+*.o
+*.a
+*.so
+
+# macOS
+*.dSYM/
+.DS_Store
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sanitizer outputs
+*.asan*

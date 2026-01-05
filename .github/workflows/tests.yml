@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-gtest-dev
+          sudo apt-get install -y libgmock-dev
+          sudo apt-get install -y clang
+
+      - name: Build tests
+        run: make hashmap_tests
+
+      - name: Run core tests
+        run: make test_hashmap_core
+
+      - name: Run augmented tests
+        run: make test_hashmap_aug
+
+      - name: Run all tests
+        run: make test_hashmap_all
+
+      - name: Build demo
+        run: make hashmap_main

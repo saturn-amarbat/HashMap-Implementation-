@@ -1,5 +1,10 @@
 # HashMap Implementation
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Tests Passing](https://img.shields.io/badge/tests-53%2F53%20passing-brightgreen)](hashmap_tests.cpp)
+![C++](https://img.shields.io/badge/C%2B%2B-20-blue)
+[![Memory Safe](https://img.shields.io/badge/memory-safe-informational?logo=c%2B%2B)](hashmap.h)
+
 A high-performance, generic hash table implementation in C++ with separate chaining for collision resolution.
 
 ## Overview

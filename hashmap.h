@@ -109,30 +109,44 @@ class HashMap {
    *
    * On resize, doesn't create new nodes, but rearranges existing ones.
    *
-   * Runs in O(L), where L is the length of the longest chain.
+   * **Time Complexity:**
+   *  - Average case: O(1) - constant time insertion at front of chain
+   *  - Worst case: O(n) - if all keys hash to same bucket (rare)
+   *  - Amortized: O(1) when accounting for resize cost
+   *
+   * **Space Complexity:** O(1) - one new node allocated
+   *
+   * **Resizing Strategy:**
+   *  - Triggered when (size + 1) / capacity > 1.5
+   *  - New capacity = old capacity * 2
+   *  - All existing nodes are reused (no new allocations)
+   *  - Nodes are re-hashed into new bucket array
    */
   void insert(KeyT key, ValT value) {
-    // avoid duplicate keys; do not update existing mapping
+    // Check if key already exists to prevent duplicates
     if (contains(key)) {
       return;
     }
-    // need to resize?
+
+    // Calculate load factor and resize if necessary
     double load_factor =
         static_cast<double>(sz + 1) / static_cast<double>(capacity);
     if (load_factor > 1.5) {
-      // double the capacity
+      // ===== RESIZE PHASE =====
       size_t new_capacity = capacity * 2;
       ChainNode** new_data = new ChainNode*[new_capacity];
       for (size_t i = 0; i < new_capacity; i++) {
         new_data[i] = nullptr;
       }
 
-      // rehash everything
+      // Rehash: move existing nodes to new bucket positions
       for (size_t i = 0; i < capacity; i++) {
         ChainNode* curr = data[i];
         while (curr != nullptr) {
           ChainNode* next = curr->next;
+          // Recompute hash position in larger table
           size_t new_index = hash<KeyT>{}(curr->key) % new_capacity;
+          // Insert at front of new chain
           curr->next = new_data[new_index];
           new_data[new_index] = curr;
           curr = next;
@@ -144,7 +158,8 @@ class HashMap {
       capacity = new_capacity;
     }
 
-    // insert new node at front of chain
+    // ===== INSERT PHASE =====
+    // Add new node at front of chain (O(1) operation)
     size_t index = hash<KeyT>{}(key) % capacity;
     ChainNode* new_node = new ChainNode(key, value, data[index]);
     data[index] = new_node;
@@ -221,35 +236,57 @@ class HashMap {
 
   /**
    * Removes the mapping for the given key from the `HashMap`, and returns the
-   * value.
+   * value that was associated with it.
    *
-   * Throws `out_of_range` if the key is not present in the map. Creates no new
-   * nodes, and does not update the key or value of any existing nodes.
+   * **Time Complexity:**
+   *  - Average case: O(1) - constant time search and removal
+   *  - Worst case: O(n) - if all keys hash to same bucket
    *
-   * Runs in O(L), where L is the length of the longest chain.
+   * **Space Complexity:** O(1) - no extra allocation (just pointer updates)
+   *
+   * **Behavior:**
+   *  - Searches the appropriate chain for the key
+   *  - If found: removes node, updates pointers, decrements size, returns value
+   *  - If not found: throws out_of_range exception
+   *  - Never creates new nodes or modifies existing keys/values
+   *
+   * **Chain Removal Scenarios:**
+   *  1. Node is first in chain: update bucket pointer to skip it
+   *  2. Node is in middle: update previous node's next pointer
+   *  3. Node is last: previous node points to null
    */
   ValT erase(const KeyT& key) {
     size_t index = hash<KeyT>{}(key) % capacity;
     ChainNode* curr = data[index];
     ChainNode* prev = nullptr;
 
+    // Linear search through chain for the key
     while (curr != nullptr) {
       if (curr->key == key) {
+        // Found the node - extract value before deletion
         ValT val = curr->value;
+
+        // Update chain pointers
         if (prev == nullptr) {
-          // first node
+          // Removing first node in chain
           data[index] = curr->next;
 
         } else {
+          // Removing middle or last node in chain
           prev->next = curr->next;
         }
+
+        // Clean up and update size
         delete curr;
         sz--;
         return val;
       }
+      // Move to next node in chain
       prev = curr;
       curr = curr->next;
     }
+
+    // Key not found in any chain
     throw out_of_range("Key not found");
   }
 
@@ -330,8 +367,8 @@ class HashMap {
   }
 
   // =====================
+
   /**
-   *
    * Checks if the contents of `this` and `other` are equivalent.
    *
    * Two `HashMap` objects are equivalent if they contain the same
@@ -339,10 +376,18 @@ class HashMap {
    * objects need not have the elements saved in the same order
    * inside of the buckets.
    *
-   * Runs in worst-case O(B*L) time, where B is the maximum number
-   * of buckets in either of the `HashMap` objects and L is the length
-   * of the  largest chain on any of the buckets.
+   * **Time Complexity:**
+   *  - Worst case: O(B*L) where B = max buckets, L = max chain length
+   *  - Average: O(n) where n = number of entries
+   *  - Early exit: O(1) if sizes differ
    *
+   * **Algorithm:**
+   *  1. Quick check: if sizes differ, maps cannot be equal
+   *  2. Iterate through all entries in this map
+   *  3. For each entry, verify other map has same key and value
+   *  4. If all checks pass, maps are equal
+   *
+   * **Note:** Order of entries doesn't matter; only contents matter.
    */
   bool operator==(const HashMap& other) const {
     if (this->sz != other.sz) {
@@ -366,45 +411,62 @@ class HashMap {
   /**
    * Resets internal state for an iterative traversal.
    *
-   * See `next` for usage details. Modifies nothing except for `curr` and
-   * `curr_idx`.
+   * Must be called before first call to next(). Can be called multiple times
+   * to restart iteration from the beginning.
    *
-   * Runs in worst-case O(B), where B is the number of buckets.
-   */
-
-  void begin() {
-    // reset internal cursors; find nothing yet
-    curr = nullptr;
-    curr_idx = 0;
-  }
-
-  /**
-   * Uses the internal state to return the "next" key and val
-   * by reference, and advances the internal state. Returns `true` if the
-   * reference parameters were set, and `false` other
+   * **Time Complexity:** O(1) - just resets two member variables
    *
-   * Example usage:
-   *
-   * ```c++
-   * HashMap<string, int> hm;
-   * hm.begin();
-   * string key;
-   * int value;
-   * while (hm.next(key, val)) {
-   *   cout << key << ": " << val << endl;
+   * **Usage Pattern:**
+   * ```cpp
+   * map.begin();
+   * KeyT k; ValT v;
+   * while (map.next(k, v)) {
+   *   // process key and value
    * }
    * ```
    *
-   *
-   * Does not visit the mappings in any defined order.
-   *
-   * Modifies nothing except for `curr` and `curr_idx`.
-   *
-   * Runs in worst-case O(B) where B is the number of buckets.
+   * **See:** next() for complete iteration protocol
    */
+  void begin() {
+    // Reset internal cursor state to start of iteration
+    curr = nullptr;  // No node selected yet
+    curr_idx = 0;    // Start at first bucket
+  }
 
+  /**
+   * Returns the next key-value pair in the map by reference and advances
+   * the internal iteration state. Returns true if a pair was retrieved,
+   * false if iteration is complete.
+   *
+   * **Time Complexity:**
+   *  - Amortized O(1) per call across full iteration
+   *  - Single call: O(k) where k = bucket span (rarely > 1)
+   *  - Full iteration: O(N+B) where N = entries, B = buckets
+   *
+   * **Iteration Properties:**
+   *  - Order is undefined (implementation detail of hash function)
+   *  - Calling next() twice without begin() continues from last position
+   *  - Safe to modify values (not keys) during iteration
+   *  - Adding/removing entries during iteration is unsafe
+   *
+   * **Algorithm:**
+   *  1. If currently in a chain, move to next node in chain
+   *  2. If chain exhausted, scan buckets for next non-empty bucket
+   *  3. Return false when all buckets exhausted
+   *
+   * **Example:**
+   * ```cpp
+   * HashMap<string, int> m;
+   * m.insert("a", 1); m.insert("b", 2);
+   * m.begin();
+   * string k; int v;
+   * while (m.next(k, v)) {
+   *   cout << k << " = " << v << endl;
+   * }
+   * ```
+   */
   bool next(KeyT& key, ValT& value) {
-    // if we're between buckets or at start, advance to next non-empty bucket
+    // Scan forward through buckets to find next non-empty chain
     while (curr == nullptr && curr_idx < capacity) {
       curr = data[curr_idx];
       curr_idx += 1;  // move past this bucket for next time

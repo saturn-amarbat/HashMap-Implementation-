@@ -24,8 +24,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-
-using namespace std;
+#include <functional> // Required for std::hash
 
 template <typename KeyT, typename ValT>
 class HashMap {
@@ -145,7 +144,7 @@ class HashMap {
         while (curr != nullptr) {
           ChainNode* next = curr->next;
           // Recompute hash position in larger table
-          size_t new_index = hash<KeyT>{}(curr->key) % new_capacity;
+          size_t new_index = std::hash<KeyT>{}(curr->key) % new_capacity;
           // Insert at front of new chain
           curr->next = new_data[new_index];
           new_data[new_index] = curr;
@@ -160,7 +159,7 @@ class HashMap {
 
     // ===== INSERT PHASE =====
     // Add new node at front of chain (O(1) operation)
-    size_t index = hash<KeyT>{}(key) % capacity;
+    size_t index = std::hash<KeyT>{}(key) % capacity;
     ChainNode* new_node = new ChainNode(key, value, data[index]);
     data[index] = new_node;
     sz++;
@@ -174,7 +173,7 @@ class HashMap {
    * Runs in O(L), where L is the length of the longest chain.
    */
   ValT& at(const KeyT& key) const {
-    size_t index = hash<KeyT>{}(key) % capacity;
+    size_t index = std::hash<KeyT>{}(key) % capacity;
     ChainNode* curr = data[index];
     while (curr != nullptr) {
       if (curr->key == key) {
@@ -182,7 +181,7 @@ class HashMap {
       }
       curr = curr->next;
     }
-    throw out_of_range("Key not found");
+    throw std::out_of_range("Key not found");
   }
 
   /**
@@ -191,7 +190,7 @@ class HashMap {
    * Runs in O(L), where L is the length of the longest chain.
    */
   bool contains(const KeyT& key) const {
-    size_t index = hash<KeyT>{}(key) % capacity;
+    size_t index = std::hash<KeyT>{}(key) % capacity;
     ChainNode* node = data[index];
     while (node != nullptr) {
       if (node->key == key) {
@@ -256,7 +255,7 @@ class HashMap {
    *  3. Node is last: previous node points to null
    */
   ValT erase(const KeyT& key) {
-    size_t index = hash<KeyT>{}(key) % capacity;
+    size_t index = std::hash<KeyT>{}(key) % capacity;
     ChainNode* curr = data[index];
     ChainNode* prev = nullptr;
 
@@ -287,7 +286,7 @@ class HashMap {
     }
 
     // Key not found in any chain
-    throw out_of_range("Key not found");
+    throw std::out_of_range("Key not found");
   }
 
   /**

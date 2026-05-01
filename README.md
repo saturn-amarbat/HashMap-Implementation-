@@ -7,9 +7,38 @@
 
 A high-performance, generic hash table implementation in C++ with separate chaining for collision resolution.
 
-## Overview
+## 📋 Table of Contents
+- [Overview](#overview)
+- [Why This Project](#why-this-project)
+- [Key Features](#key-features)
+- [Architecture](#architecture)
+- [Quick Start](#quick-start)
+- [Usage Example](#usage-example)
+- [Building and Testing](#building-and-testing)
+- [Test Coverage](#test-coverage)
+- [Performance Notes](#performance-notes)
+- [License](#license)
 
-This project demonstrates a production-quality implementation of a hash table (hash map) data structure using C++ templates. The implementation features dynamic resizing, collision handling via chaining, and comprehensive support for iteration and comparison operations.
+## 🎯 Overview
+
+This project demonstrates a **production-quality implementation** of a hash table (hash map) data structure using C++ templates. Built as a portfolio piece to showcase systems programming skills, data structure knowledge, and software engineering best practices.
+
+Perfect for demonstrating understanding of:
+- ✅ Memory management and pointer manipulation
+- ✅ Template metaprogramming
+- ✅ Algorithm complexity analysis
+- ✅ Test-driven development
+- ✅ Build systems and tooling
+
+## 💼 Why This Project?
+
+This implementation showcases several key computer science concepts valuable in software engineering roles:
+
+- **Data Structures**: Deep understanding of hash tables and collision resolution strategies
+- **Memory Management**: Safe and efficient memory allocation, deallocation, and leak prevention
+- **Generic Programming**: Template-based design for type flexibility
+- **Testing**: Comprehensive test coverage with GoogleTest framework
+- **Performance Analysis**: Big-O complexity analysis and optimization strategies
 
 ### Key Features
 
@@ -25,7 +54,7 @@ This project demonstrates a production-quality implementation of a hash table (h
 - **Memory Safety**: Compiled with AddressSanitizer and UndefinedBehaviorSanitizer to catch memory errors
 - **Comprehensive Testing**: 53 test cases covering all operations and edge cases
 
-## Architecture
+## ⚙️ Architecture
 
 ### Data Structure
 
@@ -62,7 +91,67 @@ When `(size + 1) / capacity > 1.5`, the hash table:
 3. **Does not allocate new nodes** — reuses and re-chains existing nodes
 4. Deallocates the old bucket array
 
-## Building and Testing
+## 🚀 Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/saturn-amarbat/HashMap-Implementation-.git
+cd HashMap-Implementation-
+
+# Build and run tests
+make hashmap_tests
+make test_hashmap_all
+
+# Run the demo
+make hashmap_main
+make run_main
+```
+
+## 💡 Usage Example
+
+```cpp
+#include "hashmap.h"
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+int main() {
+  // Create a hash table with initial capacity of 10
+  HashMap<string, int> stock;
+
+  // Insert key-value pairs
+  stock.insert("apples", 42);
+  stock.insert("oranges", 37);
+  stock.insert("bananas", 28);
+
+  // Check if key exists
+  if (stock.contains("apples")) {
+    cout << "Apples in stock: " << stock.at("apples") << endl;
+  }
+
+  // Modify values - at() returns a mutable reference
+  stock.at("apples") = 45;
+
+  // Iterate through all entries
+  stock.begin();
+  string product;
+  int count;
+  while (stock.next(product, count)) {
+    cout << product << ": " << count << endl;
+  }
+
+  // Remove an entry - returns the removed value
+  int removed = stock.erase("bananas");
+
+  // Clear all entries - deallocates all memory
+  stock.clear();
+
+  return 0;
+}
+```
+
+## 🏗️ Building and Testing
 
 ### Prerequisites
 
@@ -94,51 +183,7 @@ make run_main
 make clean
 ```
 
-## Usage Example
-
-```cpp
-#include "hashmap.h"
-#include <iostream>
-#include <string>
-
-using namespace std;
-
-int main() {
-  // Create a hash table with initial capacity of 10
-  HashMap<string, int> stock;
-
-  // Insert key-value pairs
-  stock.insert("apples", 42);
-  stock.insert("oranges", 37);
-  stock.insert("bananas", 28);
-
-  // Check if key exists
-  if (stock.contains("apples")) {
-    cout << "Apples in stock: " << stock.at("apples") << endl;
-  }
-
-  // Modify values
-  stock.at("apples") = 45;
-
-  // Iterate through all entries
-  stock.begin();
-  string product;
-  int count;
-  while (stock.next(product, count)) {
-    cout << product << ": " << count << endl;
-  }
-
-  // Remove an entry
-  int removed = stock.erase("bananas");
-
-  // Clear all entries
-  stock.clear();
-
-  return 0;
-}
-```
-
-## Test Coverage
+## ✅ Test Coverage
 
 The implementation includes **53 comprehensive tests** organized into two categories:
 
@@ -240,7 +285,7 @@ bool next(KeyT& key, ValT& value) {
 - **Documentation**: Comprehensive file and function headers for portfolio readability
 - **Formatting**: Consistent indentation and naming conventions
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 .
@@ -252,7 +297,7 @@ bool next(KeyT& key, ValT& value) {
 └── suppr.txt             # AddressSanitizer suppressions
 ```
 
-## Performance Notes
+## 🚀 Performance Notes
 
 - **Average Case**: O(1) for insert, lookup, and erase with good hash distribution
 - **Worst Case**: O(N) if all keys hash to the same bucket (rare with good hash functions)
